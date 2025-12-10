@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+import sys
+import re
+import string
+
+# load top words
+TOP_WORDS = set()
+with open("results/step1_topwords.txt") as f:
+    for line in f:
+        w, _ = line.strip().split("\t")
+        TOP_WORDS.add(w)
+
+KNOWN_DATES = {
+    # Sherlock Holmes
+    'study in scarlet': 1887,
+    'sign of four': 1890,
+    'adventures of sherlock holmes': 1892,
+    'memoirs of sherlock holmes': 1894,
+    'hound of the baskervilles': 1902,
+    'return of sherlock holmes': 1905,
+    'valley of fear': 1915,
+    'his last bow': 1917,
+    'bruce-partington plans': 1908,
+    # Edgar Allan Poe
+    'edgar allan poe': 1845,
+    'works of edgar allan poe': 1845,
+    # Agatha Christie
+    'mysterious affair at styles': 1920,
+    'murder on the links': 1923,
+    'poirot investigates': 1924,
+    'secret adversary': 1922,
+    'man in the brown suit': 1924,
+    # Father Brown by Chesterton
+    'innocence of father brown': 1911,
+    'wisdom of father brown': 1914,
+    # Others
+    'moonstone': 1868,
+    'mystery of the yellow room': 1907,
+    'secret of the night': 1914,
+    'red house mystery': 1922,
+    'whose body': 1923,
+    'hand in the dark': 1920,
+}
+
+# same header/footer handling as step1
+in_content = False
+current_year = None
+
+for line in sys.stdin:
+    line = line.strip()
+
+    if '*** START OF' in line:
+        in_content = True
+        continue
+    if '*** END OF' in line:
+        in_content = False
+        current_year = None
+        continue
+
+    if not in_content:
+        # detect title to assign year
+        low = line.lower()
+        for title in KNOWN_DATES:
+            if title in low:
+                current_year = KNOWN_DATES[title]
+        continue
+
+    if not current_year:
+        continue
+
+    words = re.findall(r"[a-zA-Z]+", line)
+    for w in words:
+        w = w.lower()
+        if w in TOP_WORDS:
+            print(f"{w}\t{current_year}\t1")
