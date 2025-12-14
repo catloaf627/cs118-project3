@@ -2,6 +2,7 @@
 import sys
 import re
 import string
+import helper_func as hf
 
 # load top words
 TOP_WORDS = set()
@@ -13,7 +14,7 @@ with open("results/step1_topwords.txt") as f:
 KNOWN_DATES = {
     # Sherlock Holmes
     'study in scarlet': 1887,
-    'sign of four': 1890,
+    'sign of the four': 1890,
     'adventures of sherlock holmes': 1892,
     'memoirs of sherlock holmes': 1894,
     'hound of the baskervilles': 1902,
@@ -45,6 +46,7 @@ KNOWN_DATES = {
 # same header/footer handling as step1
 in_content = False
 current_year = None
+in_toc = False
 
 for line in sys.stdin:
     line = line.strip()
@@ -57,19 +59,32 @@ for line in sys.stdin:
         current_year = None
         continue
 
-    if not in_content:
+    if not in_content and current_year == None:
         # detect title to assign year
-        low = line.lower()
-        for title in KNOWN_DATES:
-            if title in low:
-                current_year = KNOWN_DATES[title]
+        if 'Title:' in line:
+            low = line.lower()
+            for title in KNOWN_DATES:
+                if title in low:
+                    current_year = KNOWN_DATES[title]
+                    break
         continue
 
-    if not current_year:
-        continue
+    # if not current_year:
+    #     continue
 
-    words = re.findall(r"[a-zA-Z]+", line)
-    for w in words:
-        w = w.lower()
-        if w in TOP_WORDS:
-            print(f"{w}\t{current_year}\t1")
+    if in_content:
+        # Table of Contents detection
+        if hf.is_table_of_contents(line):
+            in_toc = True
+            continue
+            
+        if in_toc and hf.is_toc_entry(line):
+            continue
+        else:
+            in_toc = False
+
+        words = re.findall(r"[a-zA-Z]+", line)
+        for w in words:
+            w = w.lower()
+            if w in TOP_WORDS:
+                print(f"{w}\t{current_year}\t1")
