@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# step1_reducer.py
+# #!/usr/bin/env python3
 import sys
 from collections import defaultdict
 
@@ -11,8 +12,10 @@ for line in sys.stdin:
     word, count = parts
     counts[word] += int(count)
 
-# Sort by count descending
-sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+# ✅ REQUIRED: count DESC, word ASC
+# sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+sorted_counts = sorted(counts.items(), key=lambda x: (-x[1], x[0]))
+
 
 for word, count in sorted_counts:
     print(f"{word}\t{count}")
