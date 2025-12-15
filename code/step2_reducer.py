@@ -1,10 +1,6 @@
-# step2_reducer.py
 #!/usr/bin/env python3
 import sys
 from collections import defaultdict
-
-years_seen = set()
-
 
 # Load top words in the correct order
 top_words = []
@@ -28,8 +24,6 @@ for line in sys.stdin:
 
     counts[(word, year)] += cnt
     totals[word] += cnt
-    years_seen.add(year)
-
 
 # Output results in top_words order
 for word in top_words:
@@ -37,12 +31,7 @@ for word in top_words:
         continue
     print(f"Word: {word} (Total: {totals[word]})")
     # sort years numeric ascending
-    # for (w, y), cnt in sorted(counts.items()):
-    #     if w == word:
-    #         print(f"{y}: {cnt}")
-    for y in sorted(years_seen):
-        cnt = counts.get((word, y), 0)
-        print(f"{y}: {cnt}")
-
+    for (w, y), cnt in sorted(counts.items()):
+        if w == word:
+            print(f"{y}: {cnt}")
     print()
-

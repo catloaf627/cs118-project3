@@ -14,8 +14,6 @@ STOP_WORDS = set(stopwords.words('english'))
 # 原逻辑：默认不在正文中（依赖 Gutenberg marker）
 # in_content = False
 
-
-
 # ========================= 新增逻辑（关键） =========================
 # TA 的 cleaned_text.txt 已经移除了 Gutenberg header / footer，
 # 因此不再包含 "*** START OF" / "*** END OF" 标记。
@@ -40,6 +38,17 @@ in_toc = False
 
 for line in sys.stdin:
     line = line.strip()
+    
+    # ======================================================================
+    # 排除所有由 ===== 构成的行，以及它们包围的 metadata 区块
+    # 跳过 metadata 分隔线
+    if re.match(r"^=+$", line):
+        continue
+
+    # 跳过 Book / Author / Year 行
+    if line.startswith("Book:") or line.startswith("Author:") or line.startswith("Year:"):
+        continue
+    # ======================================================================
 
     # ======================================================================
     # 原有 Gutenberg START / END 逻辑（保留，但在 cleaned_text.txt 中无效）
