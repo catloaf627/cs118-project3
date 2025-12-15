@@ -35,4 +35,3 @@ for word in top_words:
         if w == word:
             print(f"{y}: {cnt}")
     print()
-

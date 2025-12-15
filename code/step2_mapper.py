@@ -47,6 +47,7 @@ KNOWN_DATES = {
 in_content = False
 current_year = None
 in_toc = False
+emitted = set()
 
 for line in sys.stdin:
     line = line.strip()
@@ -88,3 +89,8 @@ for line in sys.stdin:
             w = w.lower()
             if w in TOP_WORDS:
                 print(f"{w}\t{current_year}\t1")
+                emitted.add(w)
+
+        for w in TOP_WORDS:
+            if w not in emitted:
+                print(f"{w}\t{current_year}\t0")
