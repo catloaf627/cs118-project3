@@ -34,9 +34,12 @@ STOP_WORDS = load_stopwords()
 RE_TOKEN = re.compile(r"[A-Za-z']+")
 RE_META = re.compile(r"^\s*(Book|Author|Year)\s*:\s*(.*)\s*$", re.IGNORECASE)
 RE_ALL_EQUALS = re.compile(r"^\s*=+\s*$")
+# Normalize words containing the Unicode ligature 'œ' in "manœuvre(s)"
+# to prevent incorrect tokenization into "man" + "oeuvre(s)"
 RE_MANOEUVRE = re.compile(r"manœuvre(s)?", re.IGNORECASE)
 
 def normalize_token(raw: str) -> str | None:
+    # Skip the contraction "we'll" to avoid it being normalized to "well"
     if raw.lower() == "we'll":
         return None
     w = raw.lower().replace("'", "")
