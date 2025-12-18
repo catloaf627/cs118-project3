@@ -26,8 +26,9 @@ python3 code/step2_reducer.py < results/step2_sorted.txt > results/step2_analysi
 # Preview results
 cat results/step1_topwords.txt
 head -60 results/step2_analysis.txt
+```
 
-## How to Run
+## Implementation Notes (Edge Cases)
 
 During development, we identified and handled a small number of edge cases in tokenization to ensure the word counts match the intended semantics of the assignment and the provided input format.
 
