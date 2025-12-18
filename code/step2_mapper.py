@@ -36,6 +36,7 @@ RE_META = re.compile(r"^\s*(Book|Author|Year)\s*:\s*(.*)\s*$", re.IGNORECASE)
 RE_ALL_EQUALS = re.compile(r"^\s*=+\s*$")
 
 def normalize_token(raw: str) -> str | None:
+        return None
     w = raw.lower().replace("'", "")
     if len(w) < 3:
         return None

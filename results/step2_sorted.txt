@@ -77284,13 +77284,6 @@ well	1905	1
 well	1905	1
 well	1905	1
 well	1905	1
-well	1905	1
-well	1905	1
-well	1905	1
-well	1905	1
-well	1905	1
-well	1905	1
-well	1905	1
 well	1907	1
 well	1907	1
 well	1907	1
@@ -78188,10 +78181,6 @@ well	1917	1
 well	1917	1
 well	1917	1
 well	1917	1
-well	1920	1
-well	1920	1
-well	1920	1
-well	1920	1
 well	1920	1
 well	1920	1
 well	1920	1

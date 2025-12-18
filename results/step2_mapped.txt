@@ -14330,7 +14330,6 @@ could	1920	1
 house	1920	1
 way	1920	1
 say	1920	1
-well	1920	1
 like	1920	1
 way	1920	1
 time	1920	1
@@ -14363,7 +14362,6 @@ back	1920	1
 door	1920	1
 room	1920	1
 door	1920	1
-well	1920	1
 see	1920	1
 door	1920	1
 way	1920	1
@@ -14853,7 +14851,6 @@ back	1920	1
 come	1920	1
 time	1920	1
 one	1920	1
-well	1920	1
 room	1920	1
 room	1920	1
 would	1920	1
@@ -16830,7 +16827,6 @@ man	1920	1
 man	1920	1
 two	1920	1
 know	1920	1
-well	1920	1
 think	1920	1
 door	1920	1
 man	1920	1
@@ -51338,7 +51334,6 @@ back	1905	1
 come	1905	1
 man	1905	1
 come	1905	1
-well	1905	1
 holmes	1905	1
 holmes	1905	1
 came	1905	1
@@ -51377,7 +51372,6 @@ back	1905	1
 man	1905	1
 could	1905	1
 said	1905	1
-well	1905	1
 come	1905	1
 holmes	1905	1
 see	1905	1
@@ -51820,7 +51814,6 @@ well	1905	1
 said	1905	1
 said	1905	1
 holmes	1905	1
-well	1905	1
 holmes	1905	1
 man	1905	1
 one	1905	1
@@ -51829,7 +51822,6 @@ well	1905	1
 well	1905	1
 said	1905	1
 holmes	1905	1
-well	1905	1
 time	1905	1
 holmes	1905	1
 holmes	1905	1
@@ -52323,7 +52315,6 @@ one	1905	1
 said	1905	1
 man	1905	1
 said	1905	1
-well	1905	1
 see	1905	1
 said	1905	1
 holmes	1905	1
@@ -55311,7 +55302,6 @@ time	1905	1
 well	1905	1
 upon	1905	1
 see	1905	1
-well	1905	1
 man	1905	1
 one	1905	1
 said	1905	1
@@ -55644,7 +55634,6 @@ could	1905	1
 see	1905	1
 said	1905	1
 time	1905	1
-well	1905	1
 well	1905	1
 back	1905	1
 room	1905	1
