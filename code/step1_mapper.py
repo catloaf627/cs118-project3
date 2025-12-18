@@ -22,11 +22,8 @@ FALLBACK_STOPWORDS = {
 }
 
 def load_stopwords():
-    try:
-        from nltk.corpus import stopwords  # type: ignore
-        return set(stopwords.words('english'))
-    except Exception:
-        return set(FALLBACK_STOPWORDS)
+    from nltk.corpus import stopwords  # type: ignore
+    return set(stopwords.words('english'))
 
 STOP_WORDS = load_stopwords()
 
