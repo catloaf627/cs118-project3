@@ -1,96 +1,138 @@
 #!/usr/bin/env python3
-import sys
+import os
 import re
-import string
-import helper_func as hf
+import sys
 
-# load top words
-TOP_WORDS = set()
-with open("results/step1_topwords.txt") as f:
-    for line in f:
-        w, _ = line.strip().split("\t")
-        TOP_WORDS.add(w)
-
-KNOWN_DATES = {
-    # Sherlock Holmes
-    'study in scarlet': 1887,
-    'sign of the four': 1890,
-    'adventures of sherlock holmes': 1892,
-    'memoirs of sherlock holmes': 1894,
-    'hound of the baskervilles': 1902,
-    'return of sherlock holmes': 1905,
-    'valley of fear': 1915,
-    'his last bow': 1917,
-    'bruce-partington plans': 1908,
-    # Edgar Allan Poe
-    'edgar allan poe': 1845,
-    'works of edgar allan poe': 1845,
-    # Agatha Christie
-    'mysterious affair at styles': 1920,
-    'murder on the links': 1923,
-    'poirot investigates': 1924,
-    'secret adversary': 1922,
-    'man in the brown suit': 1924,
-    # Father Brown by Chesterton
-    'innocence of father brown': 1911,
-    'wisdom of father brown': 1914,
-    # Others
-    'moonstone': 1868,
-    'mystery of the yellow room': 1907,
-    'secret of the night': 1914,
-    'red house mystery': 1922,
-    'whose body': 1923,
-    'hand in the dark': 1920,
+# ---- Stopwords: prefer NLTK; fallback ----
+FALLBACK_STOPWORDS = {
+    'i','me','my','myself','we','our','ours','ourselves','you',"you're","you've","you'll","you'd",
+    'your','yours','yourself','yourselves','he','him','his','himself','she',"she's",'her','hers',
+    'herself','it',"it's",'its','itself','they','them','their','theirs','themselves','what','which',
+    'who','whom','this','that',"that'll",'these','those','am','is','are','was','were','be','been',
+    'being','have','has','had','having','do','does','did','doing','a','an','the','and','but','if',
+    'or','because','as','until','while','of','at','by','for','with','about','against','between',
+    'into','through','during','before','after','above','below','to','from','up','down','in','out',
+    'on','off','over','under','again','further','then','once','here','there','when','where','why',
+    'how','all','any','both','each','few','more','most','other','some','such','no','nor','not','only',
+    'own','same','so','than','too','very','s','t','can','will','just','don',"don't",'should',"should've",
+    'now','d','ll','m','o','re','ve','y','ain','aren',"aren't",'couldn',"couldn't",'didn',"didn't",
+    'doesn',"doesn't",'hadn',"hadn't",'hasn',"hasn't",'haven',"haven't",'isn',"isn't",'ma','mightn',
+    "mightn't",'mustn',"mustn't",'needn',"needn't",'shan',"shan't",'shouldn',"shouldn't",'wasn',"wasn't",
+    'weren',"weren't",'won',"won't",'wouldn',"wouldn't"
 }
 
-# same header/footer handling as step1
-in_content = False
-current_year = None
-in_toc = False
-emitted = set()
+def load_stopwords():
+    try:
+        from nltk.corpus import stopwords  # type: ignore
+        return set(stopwords.words('english'))
+    except Exception:
+        return set(FALLBACK_STOPWORDS)
 
-for line in sys.stdin:
-    line = line.strip()
+STOP_WORDS = load_stopwords()
 
-    if '*** START OF' in line:
-        in_content = True
-        continue
-    if '*** END OF' in line:
-        in_content = False
-        current_year = None
-        continue
+# ---- Parsing helpers ----
+RE_TOKEN = re.compile(r"[A-Za-z']+")
+RE_META = re.compile(r"^\s*(Book|Author|Year)\s*:\s*(.*)\s*$", re.IGNORECASE)
+RE_ALL_EQUALS = re.compile(r"^\s*=+\s*$")
 
-    if not in_content and current_year == None:
-        # detect title to assign year
-        if 'Title:' in line:
-            low = line.lower()
-            for title in KNOWN_DATES:
-                if title in low:
-                    current_year = KNOWN_DATES[title]
-                    break
-        continue
+def normalize_token(raw: str) -> str | None:
+    w = raw.lower().replace("'", "")
+    if len(w) < 3:
+        return None
+    if not w.isalpha():
+        return None
+    if w in STOP_WORDS:
+        return None
+    return w
 
-    # if not current_year:
-    #     continue
+def load_top_words() -> set[str]:
+    # Handout suggests env var TOP_WORDS_FILE
+    path = os.environ.get("TOP_WORDS_FILE", "results/step1_topwords.txt")
+    top = set()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                # step1 output format: "word count"
+                parts = line.split()
+                if parts:
+                    top.add(parts[0].lower())
+    except FileNotFoundError:
+        # If not found, fail loudly; step2 depends on it
+        sys.stderr.write(f"ERROR: TOP_WORDS_FILE not found: {path}\n")
+        sys.exit(1)
+    return top
 
-    if in_content:
-        # Table of Contents detection
-        if hf.is_table_of_contents(line):
-            in_toc = True
+def toc_state_machine(line: str, in_toc: bool) -> tuple[bool, bool]:
+    s = line.strip()
+    low = s.lower()
+
+    if not in_toc:
+        if low in ("contents", "table of contents"):
+            return True, True
+        return False, False
+
+    if s == "":
+        return True, True
+
+    is_listing = bool(re.match(r"^\s*([ivxlcdm]+|\d+)\s*[\.\):\-]", low)) or \
+                 ("chapter" in low and len(s) < 200)
+
+    if is_listing:
+        return True, True
+
+    return False, False
+
+def main():
+    top_words = load_top_words()
+
+    current_year: int | None = None
+    in_toc = False
+
+    for line in sys.stdin:
+        line = line.rstrip("\n")
+
+        # Skip ===== separators
+        if RE_ALL_EQUALS.match(line):
             continue
-            
-        if in_toc and hf.is_toc_entry(line):
+
+        # Handle metadata
+        m = RE_META.match(line)
+        if m:
+            key = m.group(1).strip().lower()
+            val = (m.group(2) or "").strip()
+            if key == "year":
+                try:
+                    current_year = int(val)
+                except ValueError:
+                    current_year = None
+            # Always skip metadata lines as "metadata"
             continue
+
+        # TOC removal if present
+        skip, new_in_toc = toc_state_machine(line, in_toc)
+        if in_toc:
+            if skip:
+                continue
+            else:
+                in_toc = False
         else:
-            in_toc = False
+            if skip:
+                in_toc = True
+                continue
 
-        words = re.findall(r"[a-zA-Z]+", line)
-        for w in words:
-            w = w.lower()
-            if w in TOP_WORDS:
-                print(f"{w}\t{current_year}\t1")
-                emitted.add(w)
+        # If we haven't seen a Year yet, we cannot emit step2 keys
+        if current_year is None:
+            continue
 
-        for w in TOP_WORDS:
-            if w not in emitted:
-                print(f"{w}\t{current_year}\t0")
+        for tok in RE_TOKEN.findall(line):
+            w = normalize_token(tok)
+            if w is None:
+                continue
+            if w in top_words:
+                sys.stdout.write(f"{w}\t{current_year}\t1\n")
+
+if __name__ == "__main__":
+    main()

@@ -1,94 +1,111 @@
-
-#step1_mapper.py
 #!/usr/bin/env python3
-import sys
+import os
 import re
-import string
-from nltk.corpus import stopwords
-import helper_func as hf
+import sys
 
-# NLTK 官方 stopwords（作业要求允许使用）
-STOP_WORDS = set(stopwords.words('english'))
+# ---- Stopwords: prefer NLTK; fallback to embedded NLTK-English list ----
+FALLBACK_STOPWORDS = {
+    'i','me','my','myself','we','our','ours','ourselves','you',"you're","you've","you'll","you'd",
+    'your','yours','yourself','yourselves','he','him','his','himself','she',"she's",'her','hers',
+    'herself','it',"it's",'its','itself','they','them','their','theirs','themselves','what','which',
+    'who','whom','this','that',"that'll",'these','those','am','is','are','was','were','be','been',
+    'being','have','has','had','having','do','does','did','doing','a','an','the','and','but','if',
+    'or','because','as','until','while','of','at','by','for','with','about','against','between',
+    'into','through','during','before','after','above','below','to','from','up','down','in','out',
+    'on','off','over','under','again','further','then','once','here','there','when','where','why',
+    'how','all','any','both','each','few','more','most','other','some','such','no','nor','not','only',
+    'own','same','so','than','too','very','s','t','can','will','just','don',"don't",'should',"should've",
+    'now','d','ll','m','o','re','ve','y','ain','aren',"aren't",'couldn',"couldn't",'didn',"didn't",
+    'doesn',"doesn't",'hadn',"hadn't",'hasn',"hasn't",'haven',"haven't",'isn',"isn't",'ma','mightn',
+    "mightn't",'mustn',"mustn't",'needn',"needn't",'shan',"shan't",'shouldn',"shouldn't",'wasn',"wasn't",
+    'weren',"weren't",'won',"won't",'wouldn',"wouldn't"
+}
 
+def load_stopwords():
+    try:
+        from nltk.corpus import stopwords  # type: ignore
+        return set(stopwords.words('english'))
+    except Exception:
+        return set(FALLBACK_STOPWORDS)
 
-# 原逻辑：默认不在正文中（依赖 Gutenberg marker）
-# in_content = False
+STOP_WORDS = load_stopwords()
 
-# ========================= 新增逻辑（关键） =========================
-# TA 的 cleaned_text.txt 已经移除了 Gutenberg header / footer，
-# 因此不再包含 "*** START OF" / "*** END OF" 标记。
-# 如果继续依赖 is_start_marker / is_end_marker，
-# 会导致 in_content 一直为 False，整份输入被跳过。
-#
-# 所以：当输入是 cleaned_text.txt 时，默认全文都是正文。
-# ================================================================
-in_content = True
+# ---- Parsing helpers ----
+RE_TOKEN = re.compile(r"[A-Za-z']+")
+RE_META = re.compile(r"^\s*(Book|Author|Year)\s*:\s*(.*)\s*$", re.IGNORECASE)
+RE_ALL_EQUALS = re.compile(r"^\s*=+\s*$")
 
-# ========================= 新增逻辑（关键） =========================
-# 你之前 Step1 出现“词正确但 count 少一点点”的典型原因：
-# 目录(TOC)过滤逻辑可能把 autograder 实际统计口径中的部分行跳过了。
-# （尤其 cleaned_text.txt 不一定完全去掉了目录/章节行）
-#
-# 所以：在 cleaned_text.txt 模式下，先禁用 TOC 过滤，更贴近 autograder。
-# 如果之后确认 cleaned_text 里确实没有 TOC，再开不开都无所谓。
-# ================================================================
-USE_TOC_FILTER = False
+def normalize_token(raw: str) -> str | None:
+    w = raw.lower().replace("'", "")
+    if len(w) < 3:
+        return None
+    if not w.isalpha():
+        return None
+    if w in STOP_WORDS:
+        return None
+    return w
 
-in_toc = False
+def toc_state_machine(line: str, in_toc: bool) -> tuple[bool, bool]:
+    """
+    Returns (should_skip_line, new_in_toc).
+    Conservative: only skip explicit TOC header and obvious chapter listing lines.
+    """
+    s = line.strip()
+    low = s.lower()
 
-for line in sys.stdin:
-    line = line.strip()
-    
-    # ======================================================================
-    # 排除所有由 ===== 构成的行，以及它们包围的 metadata 区块
-    # 跳过 metadata 分隔线
-    if re.match(r"^=+$", line):
-        continue
+    if not in_toc:
+        if low in ("contents", "table of contents"):
+            return True, True
+        return False, False
 
-    # 跳过 Book / Author / Year 行
-    if line.startswith("Book:") or line.startswith("Author:") or line.startswith("Year:"):
-        continue
-    # ======================================================================
+    # in_toc == True
+    if s == "":
+        # blank lines inside TOC: keep skipping but allow exit if TOC ends
+        return True, True
 
-    # ======================================================================
-    # 原有 Gutenberg START / END 逻辑（保留，但在 cleaned_text.txt 中无效）
-    # ======================================================================
-    # if hf.is_start_marker(line):
-    #     in_content = True
-    #     continue
+    # Obvious TOC listing line heuristics
+    # - starts with roman numeral / digit then punctuation
+    # - or contains "chapter" and looks short-ish
+    is_listing = bool(re.match(r"^\s*([ivxlcdm]+|\d+)\s*[\.\):\-]", low)) or \
+                 ("chapter" in low and len(s) < 200)
 
-    # if hf.is_end_marker(line):
-    #     in_content = False
-    #     continue
+    if is_listing:
+        return True, True
 
-    # if not in_content:
-    #     continue
-    # ======================================================================
+    # First non-listing non-empty line => TOC ended; do NOT skip it
+    return False, False
 
-    # ======================================================================
-    # 原有 Table of Contents detection（保留，但默认禁用）
-    # 原因：cleaned_text.txt 下该逻辑可能“误杀”一些应该统计的行，
-    # 导致 count 比 autograder 小。
-    # ======================================================================
-    if USE_TOC_FILTER:
-    # Table of Contents detection
-        if hf.is_table_of_contents(line):
-            in_toc = True
+def main():
+    in_toc = False
+
+    for line in sys.stdin:
+        line = line.rstrip("\n")
+
+        # Skip separators of ======
+        if RE_ALL_EQUALS.match(line):
             continue
-            
-        if in_toc and hf.is_toc_entry(line):
+
+        # Skip metadata lines (but we do not need year in step1)
+        if RE_META.match(line):
             continue
+
+        # TOC removal (if present)
+        skip, new_in_toc = toc_state_machine(line, in_toc)
+        if in_toc:
+            if skip:
+                continue
+            else:
+                in_toc = False
         else:
-            in_toc = False
-    # ======================================================================
+            if skip:
+                in_toc = True
+                continue
 
-    # Extract alphabetic words
-    words = re.findall(r"[a-zA-Z]+", line)
-    for w in words:
-        w = w.lower()
-        # ⚠️ 关键点：
-        # 不能额外过滤 said / one / man / time / little / sir 等词
-        # autograder 正是基于这些“高频功能词”来判分
-        if len(w) >= 3 and w not in STOP_WORDS:
-        # if len(w) >= 3:
-            sys.stdout.write(w + "\t1\n")
+        # Tokenize and emit
+        for tok in RE_TOKEN.findall(line):
+            w = normalize_token(tok)
+            if w is not None:
+                sys.stdout.write(f"{w}\t1\n")
+
+if __name__ == "__main__":
+    main()
