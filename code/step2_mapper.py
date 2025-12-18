@@ -34,6 +34,7 @@ STOP_WORDS = load_stopwords()
 RE_TOKEN = re.compile(r"[A-Za-z']+")
 RE_META = re.compile(r"^\s*(Book|Author|Year)\s*:\s*(.*)\s*$", re.IGNORECASE)
 RE_ALL_EQUALS = re.compile(r"^\s*=+\s*$")
+RE_MANOEUVRE = re.compile(r"manœuvre(s)?", re.IGNORECASE)
 
 def normalize_token(raw: str) -> str | None:
     if raw.lower() == "we'll":
@@ -95,6 +96,7 @@ def main():
 
     for line in sys.stdin:
         line = line.rstrip("\n")
+        line = RE_MANOEUVRE.sub(lambda m: "manoeuvre" + (m.group(1) or ""), line)
 
         # Skip ===== separators
         if RE_ALL_EQUALS.match(line):

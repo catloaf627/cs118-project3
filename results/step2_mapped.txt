@@ -468,7 +468,6 @@ one	1887	1
 little	1887	1
 upon	1887	1
 say	1887	1
-man	1887	1
 holmes	1887	1
 think	1887	1
 sir	1887	1
@@ -29021,7 +29020,6 @@ came	1894	1
 man	1894	1
 know	1894	1
 holmes	1894	1
-man	1894	1
 could	1894	1
 room	1894	1
 holmes	1894	1
@@ -56728,7 +56726,6 @@ two	1922	1
 door	1922	1
 time	1922	1
 back	1922	1
-man	1922	1
 time	1922	1
 door	1922	1
 door	1922	1
@@ -59180,7 +59177,6 @@ house	1922	1
 man	1922	1
 way	1922	1
 said	1922	1
-man	1922	1
 man	1922	1
 house	1922	1
 way	1922	1

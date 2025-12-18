@@ -1,6 +1,6 @@
 said 8760
 one 6528
-man 5122
+man 5118
 would 5098
 could 4229
 upon 3773
@@ -11590,6 +11590,7 @@ mal 6
 mangled 6
 manifestations 6
 manifested 6
+manoeuvre 6
 manual 6
 manufactured 6
 marking 6
@@ -12827,7 +12828,6 @@ maltese 5
 maman 5
 mane 5
 mannered 5
-manoeuvre 5
 maori 5
 marine 5
 marred 5
@@ -15060,8 +15060,6 @@ urchin 4
 urgently 4
 urges 4
 usefully 4
-uvre 4
-uvres 4
 vacation 4
 vacillating 4
 vagaries 4
@@ -16570,6 +16568,7 @@ managers 3
 maned 3
 maneuvers 3
 manifestation 3
+manoeuvres 3
 maple 3
 mar 3
 marbles 3
@@ -17646,6 +17645,7 @@ upsets 3
 upspringing 3
 urn 3
 utensils 3
+uvre 3
 vacancies 3
 vacuum 3
 vagabond 3
@@ -28015,7 +28015,7 @@ outgrown 1
 outlast 1
 outlay 1
 outlived 1
-outman 1
+outmanoeuvred 1
 outposts 1
 outpouring 1
 outre 1
@@ -31357,7 +31357,7 @@ utilitarian 1
 utilitarianism 1
 utrecht 1
 uttereed 1
-uvred 1
+uvres 1
 vacate 1
 vacated 1
 vacuity 1
