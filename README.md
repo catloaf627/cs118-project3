@@ -1,3 +1,6 @@
+The source code for this project is available at:  
+https://github.com/catloaf627/cs118-project3
+
 ## How to Run
 
 ```bash
@@ -23,3 +26,23 @@ python3 code/step2_reducer.py < results/step2_sorted.txt > results/step2_analysi
 # Preview results
 cat results/step1_topwords.txt
 head -60 results/step2_analysis.txt
+
+## How to Run
+
+During development, we identified and handled a small number of edge cases in tokenization to ensure the word counts match the intended semantics of the assignment and the provided input format.
+
+### Handling the contraction "we'll"
+
+The tokenizer removes ASCII apostrophes during normalization.  
+As a result, the contraction `"we'll"` would be normalized to `"well"`, incorrectly inflating the count of the word **well**.
+
+To prevent this, occurrences of `"we'll"` (both ASCII and Unicode forms) are explicitly skipped during normalization, ensuring that **well** is only counted when it appears as an actual word.
+
+### Handling the word "manœuvre"
+
+Some texts contain the word `"manœuvre"` (or `"manœuvres"`), which includes the Unicode ligature **œ**.  
+Since the tokenizer only recognizes standard ASCII letters, this ligature would otherwise cause the word to be split into `"man"` and `"oeuvre(s)"`, incorrectly increasing the count of **man**.
+
+To address this, `"manœuvre"` and `"manœuvres"` are normalized to `"manoeuvre"` and `"manoeuvres"` prior to tokenization, preventing **man** from being over-counted.
+
+These fixes are intentionally minimal and localized, and do not affect the handling of other words or contractions.
